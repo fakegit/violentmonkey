@@ -7,17 +7,21 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '15'
-      - name: Install deps
-        run: yarn
+      - name: Prepare
+        run: |
+          # Continue only if files in src/ is changed
+          git diff $COMMIT_BEFORE | grep '^diff --git a/src/' || exit 1
+          yarn
+        env:
+          COMMIT_BEFORE: ${{ github.event.before }}
       - name: Update locale files
         run: yarn copyI18n
       - name: Upload to Transifex
